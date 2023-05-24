@@ -9,7 +9,7 @@ router.post("/createdeity",upload.single('image'),createDeity);
 router.get("/getalldeity",getAllDiety);
 router.get("/getdeity/:id",getOneDeity);
 router.put("/updatedeity/:id",upload.single("image"),updateDeity);
-router.delete("/deletedeit/:id",deleteDeity);
+router.delete("/deletedeity/:id",deleteDeity);
 
 
 module.exports=router;

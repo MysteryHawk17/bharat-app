@@ -29,7 +29,7 @@ const createDeity = asynchandler(async (req, res) => {
         flowers: flowers,
         image:image
     })
-    const savedDeity = await newDeity.save().populate("temple");
+    const savedDeity = await newDeity.save()
 
 
     if (savedDeity) {
@@ -109,11 +109,11 @@ const updateDeity = asynchandler(async (req, res) => {
 })
 
 const deleteDeity=asynchandler(async(req,res)=>{
-    const id=req.params;
+    const id=req.params.id;
     if(id){
         const findDeity=await deityDB.findById({_id:id});
         if(findDeity){
-            const deletedDeity=await findDeity.findByIdAndDelete({_id:id});
+            const deletedDeity=await deityDB.findByIdAndDelete({_id:id});
             if(deletedDeity){
                 response.successResponse(res,deletedDeity,"Deleted the deity successfully");
 
