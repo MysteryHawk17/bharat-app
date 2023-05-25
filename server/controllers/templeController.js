@@ -7,8 +7,8 @@ const test = async (req, res) => {
     response.successResponse(res, '', 'Temple route established');
 }
 const createTemple = asynchandler(async (req, res) => {
-    const { name } = req.body;
-    if (!name || !req.file) {
+    const { name ,getPrasad} = req.body;
+    if (!name ||!getPrasad||!req.file) {
         response.validationError(res, 'Fill in all the fields');
         return;
     }
@@ -19,7 +19,8 @@ const createTemple = asynchandler(async (req, res) => {
     imageURL = uploadedData.secure_url;
     const newTemple = templeDB({
         name: name,
-        image: imageURL
+        image: imageURL,
+        getPrasad:getPrasad
     });
     const savedData = await newTemple.save();
     if (savedData) {

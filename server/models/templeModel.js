@@ -9,6 +9,10 @@ const templeSchema=mongoose.Schema({
         type:String,
         required:true,
     },
+    getPrasad:{
+        type:String,
+        required:true
+    }
 
 })
 
