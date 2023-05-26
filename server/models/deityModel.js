@@ -15,7 +15,7 @@ const deitySchema=mongoose.Schema({
             ref:"Temple"
         }
     ],
-    song:{
+    playlistURL:{
         type:String,
         required:true
     },

@@ -7,8 +7,9 @@ const test = async (req, res) => {
     response.successResponse(res, '', 'Temple route established');
 }
 const createTemple = asynchandler(async (req, res) => {
-    const { name ,getPrasad} = req.body;
-    if (!name ||!getPrasad||!req.file) {
+    console.log(req.body);
+    const { name, getPrasad } = req.body;
+    if (!name || !getPrasad || !req.file) {
         response.validationError(res, 'Fill in all the fields');
         return;
     }
@@ -20,7 +21,7 @@ const createTemple = asynchandler(async (req, res) => {
     const newTemple = templeDB({
         name: name,
         image: imageURL,
-        getPrasad:getPrasad
+        getPrasad: getPrasad
     });
     const savedData = await newTemple.save();
     if (savedData) {
@@ -78,5 +79,26 @@ const deleteTemple = asynchandler(async (req, res) => {
     }
 
 })
+const getAllTemple = asynchandler(async (req, res) => {
+    const allTemples = await templeDB.find({});
+    if (allTemples) {
+        response.successResponse(res, allTemples, "Successfully fetched all the temples");
+    }
+    else {
+        response.internalServerError(res, "Cannot fetch all the temples");
+    }
+})
 
-module.exports = { test ,createTemple,updateTemple,deleteTemple};
+
+const getATemple = asynchandler(async (req, res) => {
+    const id = req.params.id;
+    const findTemple = await templeDB.findById({ _id: id });
+    if (findTemple) {
+
+        response.successResponse(res, findTemple, "Successfully fetched the temple");
+    }
+    else {
+        response.notFoundError(res, "Failed to find the specified temple");
+    }
+})
+module.exports = { test, createTemple, updateTemple, deleteTemple, getAllTemple ,getATemple};

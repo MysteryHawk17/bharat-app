@@ -2,32 +2,33 @@ const deityDB = require("../models/deityModel")
 const response = require("../middlewares/responsemiddleware");
 const asynchandler = require('express-async-handler');
 const cloudinary = require("../utils/cloudinary");
+const { getAccessToken, getPlaylistTracks } = require("../utils//spotifyIntegrate");
 
 const test = asynchandler(async (req, res) => {
     response.successResponse(res, '', 'Deity Route Established');
 })
 
 const createDeity = asynchandler(async (req, res) => {
-    const { name, temple, song, flowers } = req.body;
-    if (!name || !temple || !song || !flowers) {
+    const { name, temple, playlistURL, flowers } = req.body;
+    if (!name || !temple || !playlistURL || !flowers) {
         response.validationError(res, "Fill in all the fields");
         return;
     }
-    var image='';
-    if(req.file){
-        const uploadedData=await cloudinary.uploader.upload(req.file.path,{
-            folder:"Bharat One"
+    var image = '';
+    if (req.file) {
+        const uploadedData = await cloudinary.uploader.upload(req.file.path, {
+            folder: "Bharat One"
         });
-        image=uploadedData.secure_url;
+        image = uploadedData.secure_url;
     }
-    const templeArray=temple.split(",");
+    const templeArray = temple.split(",");
 
     const newDeity = new deityDB({
         name: name,
         temple: templeArray,
-        song: song,
+        playlistURL: playlistURL,
         flowers: flowers,
-        image:image
+        image: image
     })
     const savedDeity = await newDeity.save()
 
@@ -76,8 +77,8 @@ const updateDeity = asynchandler(async (req, res) => {
         if (name) {
             updateData.name = name;
         }
-        if (song) {
-            updateData.song = song;
+        if (playlistURL) {
+            updateData.playlistURL = playlistURL;
 
         }
         if (flowers) {
@@ -108,26 +109,57 @@ const updateDeity = asynchandler(async (req, res) => {
     }
 })
 
-const deleteDeity=asynchandler(async(req,res)=>{
-    const id=req.params.id;
-    if(id){
-        const findDeity=await deityDB.findById({_id:id});
-        if(findDeity){
-            const deletedDeity=await deityDB.findByIdAndDelete({_id:id});
-            if(deletedDeity){
-                response.successResponse(res,deletedDeity,"Deleted the deity successfully");
+const deleteDeity = asynchandler(async (req, res) => {
+    const id = req.params.id;
+    if (id) {
+        const findDeity = await deityDB.findById({ _id: id });
+        if (findDeity) {
+            const deletedDeity = await deityDB.findByIdAndDelete({ _id: id });
+            if (deletedDeity) {
+                response.successResponse(res, deletedDeity, "Deleted the deity successfully");
 
             }
-            else{
-                response.internalServerError(res,"Error in deleting the deity");
+            else {
+                response.internalServerError(res, "Error in deleting the deity");
             }
         }
-        else{
-            response.notFoundError(res,"Not found the deity");
+        else {
+            response.notFoundError(res, "Not found the deity");
         }
     }
-    else{
-        response.validationError(res,"Give in proper details");
+    else {
+        response.validationError(res, "Give in proper details");
     }
 })
-module.exports = { test ,createDeity,getAllDiety,getOneDeity,updateDeity,deleteDeity};
+
+const getAllSongs = asynchandler(async (req, res) => {
+    const id = req.params.id;
+    if (!id) {
+        response.validationError(res, 'Please fill in the parameters');
+        return;
+    }
+    const findDeity = await deityDB.findById({ _id: id });
+    if (findDeity) {
+        const playlist = findDeity.playlistURL;
+        const playlistId = playlist.split("/")[4];
+        const accessToken = await getAccessToken();
+        const getAllTracks = await getPlaylistTracks(accessToken, playlistId);
+        if (getAllTracks) {
+
+            response.successResponse(res, getAllTracks, "Successfully fetched the tracks");
+        }
+        else {
+            response.internalServerError(res, "Error in fetching the tracks.");
+        }
+
+
+    }
+    else {
+        response.notFoundError(res, "Cannot found the deity");
+    }
+
+
+
+})
+
+module.exports = { test, createDeity, getAllDiety, getOneDeity, updateDeity, deleteDeity ,getAllSongs};
