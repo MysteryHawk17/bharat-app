@@ -14,7 +14,7 @@ const templeSchema=mongoose.Schema({
         required:true
     }
 
-})
+},{timestamps:true})
 
 const templeModel=mongoose.model("Temple",templeSchema)
 module.exports=templeModel;
