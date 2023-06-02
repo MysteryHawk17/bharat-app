@@ -22,7 +22,7 @@ const createMandir = asynchandler(async (req, res) => {
         displayImage: uploadedData.secure_url,
         ytLink: link,
         text: text,
-        deityId: ''
+        // deityId:{}
     })
     const savedMandir = await newMandir.save();
     if (savedMandir) {

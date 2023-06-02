@@ -1,6 +1,10 @@
 const mongoose = require("mongoose")
 
 const aradhyaSchmea = mongoose.Schema({
+    name:{
+        type:String,
+        required:true
+    },
     displayImage: {
         type: String,
         required: true
@@ -8,7 +12,6 @@ const aradhyaSchmea = mongoose.Schema({
     ytLink: [String],
     audioLink: {
         type: String,
-        required: true
     },
     literature: [{
         type: mongoose.Schema.Types.ObjectId,

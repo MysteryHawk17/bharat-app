@@ -12,6 +12,7 @@ const deityRoutes=require("./routes/deityRoutes");
 const literatureRoutes=require("./routes/literatureRoutes");
 const mandirRoutes=require("./routes/mandirRoutes");
 const tyoharRoutes=require("./routes/tyoharRoutes");
+const aradhanaRoutes=require("./routes/aradhanaRoutes");
 //middlewares
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -28,6 +29,7 @@ app.use("/api/deity",deityRoutes);
 app.use('/api/literature',literatureRoutes);
 app.use("/api/mandir",mandirRoutes);
 app.use("/api/tyohar",tyoharRoutes);
+app.use("/api/aradhana",aradhanaRoutes);
 
 //server test route
 app.get("/", (req, res) => {
