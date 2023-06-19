@@ -65,10 +65,12 @@ const updateCommunityDetails = asynchandler(async (req, res) => {
         return;
     }
     const findCommunity = await communityDB.findById({ _id: id });
+    // console.log(findCommunity)
     if (findCommunity) {
         const updateData = {};
-        console.log(req.body)
+        // console.log(req.body)
         const { name, description, deityId } = req.body;
+        // console.log(name)
         if (name) {
             updateData.name = name;
         }
@@ -82,12 +84,13 @@ const updateCommunityDetails = asynchandler(async (req, res) => {
             const uploadedData = await cloudinary.uploader.upload(req.file.path, {
                 folder: "Bharat One"
             });
-            updateData.image = uploadedData.secure_url;
+            updateData.displayImage = uploadedData.secure_url;
+            const deletedCloudData=await cloudinary.uploader.destroy(findCommunity.displayImage)
         }
-        console.log(updateData)
-        const updatedCommunity = await communityDB.findByIdAndUpdate({ _id: id }, {
+        // console.log(updateData)
+        const updatedCommunity = await communityDB.findByIdAndUpdate({ _id: id },
             updateData
-        }, { new: true });
+            , { new: true });
         console.log(updatedCommunity)
         if (updatedCommunity) {
             if (deityId) {
