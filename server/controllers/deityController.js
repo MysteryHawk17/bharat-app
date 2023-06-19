@@ -9,26 +9,27 @@ const test = asynchandler(async (req, res) => {
 })
 
 const createDeity = asynchandler(async (req, res) => {
-    const { name, temple, playlistURL, flowers } = req.body;
-    if (!name || !temple || !playlistURL || !flowers) {
+    const { name, temple, playlistURL } = req.body;
+    if (!name || !temple || !playlistURL || !req.files) {
         response.validationError(res, "Fill in all the fields");
         return;
     }
-    var image = '';
-    if (req.file) {
-        const uploadedData = await cloudinary.uploader.upload(req.file.path, {
-            folder: "Bharat One"
-        });
-        image = uploadedData.secure_url;
-    }
+
+    const uploadedData1 = await cloudinary.uploader.upload(req.files[0].path, {
+        folder: "Bharat One"
+    });
+    const uploadedData2 = await cloudinary.uploader.upload(req.files[1].path, {
+        folder: "Bharat One"
+    });
+
     const templeArray = temple.split(",");
 
     const newDeity = new deityDB({
         name: name,
         temple: templeArray,
         playlistURL: playlistURL,
-        flowers: flowers,
-        image: image
+        flowers: uploadedData2.secure_url,
+        image: uploadedData1.secure_url
     })
     const savedDeity = await newDeity.save()
 
@@ -81,14 +82,18 @@ const updateDeity = asynchandler(async (req, res) => {
             updateData.playlistURL = playlistURL;
 
         }
-        if (flowers) {
-            updateData.flowers = flowers
-        }
-        if (req.file) {
-            const uploadedData = await cloudinary.uploader.upload(req.file.path, {
+
+        if (req.files) {
+            const uploadedData = await cloudinary.uploader.upload(req.files[0].path, {
                 folder: "Bharat One"
             });
             updateData.image = uploadedData.secure_url;
+        }
+        if (req.files.length > 1) {
+            const uploadedData = await cloudinary.uploader.upload(req.files[1].path, {
+                folder: "Bharat One"
+            });
+            updateData.flowers = uploadedData.secure_url;
         }
         if (temple) {
             const templeArray = findDeity.temple;
@@ -162,4 +167,4 @@ const getAllSongs = asynchandler(async (req, res) => {
 
 })
 
-module.exports = { test, createDeity, getAllDiety, getOneDeity, updateDeity, deleteDeity ,getAllSongs};
+module.exports = { test, createDeity, getAllDiety, getOneDeity, updateDeity, deleteDeity, getAllSongs };
