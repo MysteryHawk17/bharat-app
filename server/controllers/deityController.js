@@ -2,6 +2,7 @@ const deityDB = require("../models/deityModel")
 const response = require("../middlewares/responsemiddleware");
 const asynchandler = require('express-async-handler');
 const cloudinary = require("../utils/cloudinary");
+const communityDB = require("../models/communityModel")
 const { getAccessToken, getPlaylistTracks } = require("../utils//spotifyIntegrate");
 
 const test = asynchandler(async (req, res) => {
@@ -120,8 +121,18 @@ const deleteDeity = asynchandler(async (req, res) => {
         const findDeity = await deityDB.findById({ _id: id });
         if (findDeity) {
             const deletedDeity = await deityDB.findByIdAndDelete({ _id: id });
+
             if (deletedDeity) {
-                response.successResponse(res, deletedDeity, "Deleted the deity successfully");
+                const deletedCommunity = await communityDB.deleteMany({
+                    _id: { $in: deletedDeity.communities }
+                })
+                if (deletedCommunity) {
+
+                    response.successResponse(res, deletedDeity, "Deleted the deity successfully");
+                }
+                else {
+                    response.successResponse(res,deletedDeity,"Deleted deity but failed to delete its communitite")
+                }
 
             }
             else {
