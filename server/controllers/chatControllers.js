@@ -24,9 +24,10 @@ const getChat = asynchandler(async (req, res) => {
 })
 
 const createMessage = asynchandler(async (req, res) => {
-    const { userId, message } = req.body;
+    const { message } = req.body;
+    const userId = req.user._id;
     const chatId = req.params.chatId;
-    if (!userId || !message||chatId==":chatId") {
+    if (!userId || !message || chatId == ":chatId") {
         return response.validationError(res, "Cannot create a chat with improper details");
     }
     const newMessage = new messageDB({
@@ -58,7 +59,7 @@ const deleteMessage = asynchandler(async (req, res) => {
     const findChat = await chatsDB.findById({ _id: chat });
     if (findChat) {
         const findIndex = findChat.chat.indexOf(message);
-        if (findIndex> -1) {
+        if (findIndex > -1) {
             findChat.chat.splice(findIndex, 1);
             await findChat.save();
             const findMessage = await messageDB.findById({ _id: message });
@@ -108,7 +109,7 @@ const updateMessage = asynchandler(async (req, res) => {
     const { message } = req.body;
     const findMessage = await messageDB.findById({ _id: messageId });
     if (findMessage) {
-        const editedMessage = await messageDB.findByIdAndUpdate({_id:messageId},{
+        const editedMessage = await messageDB.findByIdAndUpdate({ _id: messageId }, {
             message: message,
             isUpdated: true
         }, { new: true })

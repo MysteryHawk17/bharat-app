@@ -62,7 +62,7 @@ const updatePost = asynchandler(async (req, res) => {
             });
             updateData.image = uploadedData.secure_url;
         }
-        const deletedImage=await cloudinary.uploader.destroy(findPost.image);
+        const deletedImage = await cloudinary.uploader.destroy(findPost.image);
         const updatedPost = await postDB.findByIdAndUpdate({ _id: id }, updateData, {
             new: true
         });
@@ -139,7 +139,8 @@ const getAPost = asynchandler(async (req, res) => {
 
 //create comment
 const postComment = asynchandler(async (req, res) => {
-    const { userId, comment } = req.body;
+    const { comment } = req.body;
+    const userId = req.user._id;
     const postId = req.params.postId;
     if (!userId || !comment || !postId) {
         return response.validationError(res, 'Cannot post a comment without the details');
@@ -202,14 +203,14 @@ const editComment = asynchandler(async (req, res) => {
 //update reaction3
 const updateReactions = asynchandler(async (req, res) => {
     const postId = req.params.postId;
-    const userId = req.body.userId;
+    const userId = req.user._id;
     if (postId == ":postId" || !userId) {
         return response.validationError(res, "Cannot react without the post id or userId");
     }
     const findPost = await postDB.findById({ _id: postId }).populate('reaction').populate("communityId").populate("comments").populate("sharedBy")
     if (findPost) {
-        const index=findPost.reaction.findIndex(obj=>obj._id==userId)
-        if (index>-1) {
+        const index = findPost.reaction.findIndex(obj => obj._id == userId)
+        if (index > -1) {
             const index = findPost.reaction.indexOf(userId);
             findPost.reaction.splice(index, 1);
             await findPost.save();
@@ -255,4 +256,5 @@ const addPostToCommunity = asynchandler(async (req, res) => {
 //approve the post to be shared
 
 
-module.exports = { test, createPost, editComment, updatePost, deleteComment, deletePost, updateReactions, addPostToCommunity, postComment, getAPost ,getAllPosts};
+
+module.exports = { test, createPost, editComment, updatePost, deleteComment, deletePost, updateReactions, addPostToCommunity, postComment, getAPost, getAllPosts };
