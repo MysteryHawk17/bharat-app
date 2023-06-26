@@ -1,4 +1,5 @@
 const deityDB = require("../models/deityModel")
+const songDB=require("../models/songsModel");
 const response = require("../middlewares/responsemiddleware");
 const asynchandler = require('express-async-handler');
 const cloudinary = require("../utils/cloudinary");
@@ -10,8 +11,8 @@ const test = asynchandler(async (req, res) => {
 })
 
 const createDeity = asynchandler(async (req, res) => {
-    const { name, temple, playlistURL } = req.body;
-    if (!name || !temple || !playlistURL || !req.files) {
+    const { name, temple } = req.body;
+    if (!name || !temple || !req.files) {
         response.validationError(res, "Fill in all the fields");
         return;
     }
@@ -28,7 +29,7 @@ const createDeity = asynchandler(async (req, res) => {
     const newDeity = new deityDB({
         name: name,
         temple: templeArray,
-        playlistURL: playlistURL,
+        songs: [],
         flowers: uploadedData2.secure_url,
         image: uploadedData1.secure_url
     })
@@ -74,15 +75,12 @@ const updateDeity = asynchandler(async (req, res) => {
     const { id } = req.params;
     const findDeity = await deityDB.findById({ _id: id });
     if (findDeity) {
-        const { name, song, flowers, temple } = req.body;
+        const { name,temple } = req.body;
         const updateData = {};
         if (name) {
             updateData.name = name;
         }
-        if (playlistURL) {
-            updateData.playlistURL = playlistURL;
-
-        }
+        
 
         if (req.files) {
             const uploadedData = await cloudinary.uploader.upload(req.files[0].path, {
@@ -131,7 +129,7 @@ const deleteDeity = asynchandler(async (req, res) => {
                     response.successResponse(res, deletedDeity, "Deleted the deity successfully");
                 }
                 else {
-                    response.successResponse(res,deletedDeity,"Deleted deity but failed to delete its communitite")
+                    response.successResponse(res, deletedDeity, "Deleted deity but failed to delete its communitite")
                 }
 
             }
@@ -176,6 +174,14 @@ const getAllSongs = asynchandler(async (req, res) => {
 
 
 
+})
+
+const uploadSong=asynchandler(async(req,res)=>{
+    const {deityId}=req.params;
+    if(deityId==":deityId"||!req.file){
+        return response.validationError(res,'Cannot upload a song without the deity id');
+    }
+    
 })
 
 module.exports = { test, createDeity, getAllDiety, getOneDeity, updateDeity, deleteDeity, getAllSongs };

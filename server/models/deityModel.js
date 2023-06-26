@@ -15,10 +15,10 @@ const deitySchema = mongoose.Schema({
             ref: "Temple"
         }
     ],
-    playlistURL: {
-        type: String,
-        required: true
-    },
+    songs: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Song"
+    }],
     flowers: {
         type: String,
         required: true
