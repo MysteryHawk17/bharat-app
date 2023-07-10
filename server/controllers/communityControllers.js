@@ -14,12 +14,20 @@ const getCommunity = asynchandler(async (req, res) => {
         response.validationError(res, 'Cannot fetch chat without the community id');
         return;
     }
+    // const fetchCommunity = await communityDB.findOne({ pageId: pageId }).populate({
+    //     path:'chat',
+    //         populate:{
+    //             path:'userId'
+    //         }
+    // });
     const fetchCommunity = await communityDB.findOne({ pageId: pageId }).populate({
-        path:'chat',
-            populate:{
-                path:'userId'
-            }
-    });
+        path: 'data.chat',
+        populate: {
+            path: 'userId',
+            select: "name"
+        }
+
+    }).populate("data.post");
     if (fetchCommunity) {
         response.successResponse(res, fetchCommunity, 'Fethced the communities successfully');
     }
@@ -40,10 +48,20 @@ const createMessage = asynchandler(async (req, res) => {
         message,
     })
     const savedMessage = await newMessage.save();
-    const findChats = await communityDB.findById({ _id: communityId }).populate("chat");
+    const findChats = await communityDB.findById({ _id: communityId }).populate({
+        path: 'data.chat',
+        populate: {
+            path: 'userId',
+            select: "name"
+        }
+
+    }).populate("data.post");
     if (findChats) {
-        const newArray = [...findChats.chat, savedMessage._id];
-        findChats.chat = newArray;
+        const newData = {
+            chat: savedMessage._id
+        }
+        const newArray = [...findChats.data, newData];
+        findChats.data = newArray;
         await findChats.save();
         response.successResponse(res, findChats, "Message posted successfully")
     }
@@ -63,9 +81,9 @@ const deleteMessage = asynchandler(async (req, res) => {
     }
     const findCommunity = await communityDB.findById({ _id: communityId });
     if (findCommunity) {
-        const findIndex = findCommunity.chat.indexOf(message);
+        const findIndex = findCommunity.data.findIndex(obj => obj.chat == message);
         if (findIndex > -1) {
-            findCommunity.chat.splice(findIndex, 1);
+            findCommunity.data.splice(findIndex, 1);
             await findCommunity.save();
             const findMessage = await messageDB.findById({ _id: message });
             if (findMessage) {
@@ -98,7 +116,7 @@ const deleteMessage = asynchandler(async (req, res) => {
         }
     }
     else {
-        response.notFoundError(res, "Cannot found the chat to delete it.");
+        response.notFoundError(res, "Cannot found the data to delete it.");
     }
 
 
@@ -131,4 +149,35 @@ const updateMessage = asynchandler(async (req, res) => {
 
 })
 
-module.exports = { test, createMessage, getCommunity, updateMessage, deleteMessage };
+const sharePost = asynchandler(async (req, res) => {
+    const { communityId } = req.params;
+    if (communityId == ":communityId") {
+        return response.validationError(res, 'Cannot share post without the community id');
+    }
+    const { postId } = req.body;
+    if (!postId) {
+        return response.validationError(res, 'Cannot share post without the post id');
+    }
+    const findCommunity = await communityDB.findById({ _id: communityId }).populate({
+        path: 'data.chat',
+        populate: {
+            path: 'userId',
+            select: "name"
+        }
+
+    }).populate("data.post");;
+    if (!findCommunity) {
+        return response.notFoundError(res, 'Cannot find the community');
+    }
+    const newPost = {
+        post: postId
+    }
+    const newArray = [...findCommunity.data, newPost];
+    findCommunity.data = newArray;
+    await findCommunity.save();
+    response.successResponse(res, findCommunity, 'Successfully shared the post');
+})
+
+
+
+module.exports = { test, createMessage, getCommunity, updateMessage, deleteMessage ,sharePost};
