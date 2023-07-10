@@ -1,6 +1,6 @@
 const userDB = require("../models/userModel");
 const dietyDB = require("../models/deityModel")
-const communityDB = require("../models/communityModel")
+const pageDB = require("../models/pageModel")
 const response = require("../middlewares/responsemiddleware");
 const asynchandler = require("express-async-handler")
 
@@ -14,7 +14,7 @@ const updateLanguage = asynchandler(async (req, res) => {
         response.validationError(res, 'Cannot find a user without the id');
         return;
     }
-    const findUser = await userDB.findById({ _id: id }).populate("communities").populate("followers").populate("followings");
+    const findUser = await userDB.findById({ _id: id }).populate("pages").populate("followers").populate("followings");
     if (findUser) {
         const { language } = req.body;
         if (!language) {
@@ -36,7 +36,7 @@ const updateLanguage = asynchandler(async (req, res) => {
     }
 })
 const getAllUsers = asynchandler(async (req, res) => {
-    const allUsers = await userDB.find().populate("communities").populate("followers").populate("followings");
+    const allUsers = await userDB.find().populate("pages").populate("followers").populate("followings");
     if (allUsers) {
         response.successResponse(res, allUsers, "Successfully fetched all the users");
     }
@@ -50,7 +50,7 @@ const getUser = asynchandler(async (req, res) => {
         response.validationError(res, 'Cannot find a user without the id');
         return;
     }
-    const findUser = await userDB.findById({ _id: id }).populate("communities").populate("followers").populate("followings");
+    const findUser = await userDB.findById({ _id: id }).populate("pages").populate("followers").populate("followings");
     if (findUser) {
         response.successResponse(res, findUser, "Successfully fetched the user")
     }
@@ -58,40 +58,15 @@ const getUser = asynchandler(async (req, res) => {
         response.notFoundError(res, 'Cannot find the user');
     }
 })
-const addCommunityAtSignin = asynchandler(async (req, res) => {
+const addPageAtSignin = asynchandler(async (req, res) => {
     const { id } = req.params;
     if (id == ':id') {
         response.validationError(res, 'Cannot find a user without the id');
         return;
     }
-    const findUser = await userDB.findById({ _id: id }).populate("communities").populate("followers").populate("followings");
+    const findUser = await userDB.findById({ _id: id }).populate("pages").populate("followers").populate("followings");
     if (findUser) {
-        const { dietyIdArray } = req.body;
-        if (!dietyIdArray) {
-            return response.validationError(res, 'Cannot begin without selecting atleast one deity');
-        }
-        var newArrayOfIds = [];
-        dietyIdArray.map(async (e) => {
-            const findDeity = await dietyDB.findById({ _id: e });
-            if (findDeity) {
-                newArrayOfIds = [...newArrayOfIds, ...findDeity.communities]
-            }
-            else {
-                response.internalServerError(res, 'Cannot add the deity.');
-            }
-        })
-        const updatedUser = await userDB.findByIdAndUpdate({ _id: id }, {
-            communities: newArrayOfIds
-        }, { new: true });
-        const updatedCommunities = await communityDB.updateMany({
-            _id: { $in: newArrayOfIds }
-        }, { $push: { subscribers: id } }, { new: true });
-        if (updatedUser) {
-            response.successResponse(res, updatedUser, "Successfully updated the user");
-        }
-        else {
-            response.internalServerError(res, "Cannot update the intrests of the user");
-        }
+        
     }
     else {
         response.notFoundError(res, 'Cannot find the user');
@@ -103,7 +78,7 @@ const updateProfile = asynchandler(async (req, res) => {
         response.validationError(res, 'Cannot find a user without the id');
         return;
     }
-    const findUser = await userDB.findById({ _id: id }).populate("communities").populate("followers").populate("followings");
+    const findUser = await userDB.findById({ _id: id }).populate("pages").populate("followers").populate("followings");
     if (findUser) {
         const updateData = {};
         const { name } = req.body;
@@ -179,4 +154,4 @@ const updateFollower = asynchandler(async (req, res) => {
     }
 })
 
-module.exports = { test, getAllUsers, getUser, updateFollower, updateLanguage, addCommunityAtSignin, updateProfile }
+module.exports = { test, getAllUsers, getUser, updateFollower, updateLanguage, addPageAtSignin, updateProfile }

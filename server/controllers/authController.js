@@ -28,7 +28,7 @@ const createUser = asynchandler(async (req, res) => {
         phone: phoneNumber,
         email: email,
         password: hashedPassword,
-        communities: [],
+        pages: [],
         followers: [],
         followings: []
     })

@@ -17,9 +17,9 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    communities: [{
+    pages: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Community"
+        ref: "Page"
     }],
     isVerified: {
         type: Boolean,

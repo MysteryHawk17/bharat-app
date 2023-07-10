@@ -1,34 +1,17 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
 
 const communitySchema = mongoose.Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    displayImage: {
-        type: String,
-        required: true
-    },
-    description: {
-        type: String,
-        required: true
-    },
-    subscribers: [{
+    pageId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
-    }],
-    posts: [{
+        ref: "Community"
+    },
+    chat: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Post"
-    }],
-    deityId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Deity"
-    }
+        ref: "Message"
+    }]
+}, { timestamps: true })
 
-},{ timestamps: true })
 
 const communityModel = mongoose.model("Community", communitySchema);
-
-module.exports = communityModel;
+module.exports=communityModel

@@ -1,5 +1,5 @@
 const postDB = require("../models/postModel");
-const communityDB = require("../models/communityModel")
+const pageDB = require("../models/pageModel")
 const response = require("../middlewares/responsemiddleware");
 const userDB = require("../models/userModel");
 const asynchandler = require('express-async-handler');
@@ -12,15 +12,15 @@ const test = asynchandler(async (req, res) => {
 
 //create a post
 const createPost = asynchandler(async (req, res) => {
-    const { communityId, caption } = req.body;
-    if (!communityId || !caption || !req.file) {
+    const { pageId, caption } = req.body;
+    if (!pageId || !caption || !req.file) {
         return response.validationError(res, 'Please fill the details to create a post');
     }
     const uploadedData = await cloudinary.uploader.upload(req.file.path, {
         folder: "Bharat One"
     });
     const newPost = new postDB({
-        communityId: communityId,
+        pageId: pageId,
         caption: caption,
         image: uploadedData.secure_url,
         reaction: [],
@@ -28,14 +28,14 @@ const createPost = asynchandler(async (req, res) => {
     });
     const savedPost = await newPost.save();
     if (savedPost) {
-        const updateCommunity = await communityDB.findByIdAndUpdate({ _id: communityId }, {
+        const updatePage = await pageDB.findByIdAndUpdate({ _id: pageId }, {
             $push: { posts: savedPost._id }
         });
-        if (updateCommunity) {
+        if (updatePage) {
             response.successResponse(res, savedPost, 'Created the post successfully');
         }
         else {
-            response.successResponse(res, savedPost, 'Created post successfully but failed to add to the community');
+            response.successResponse(res, savedPost, 'Created post successfully but failed to add to the page');
         }
     }
     else {
@@ -89,6 +89,9 @@ const deletePost = asynchandler(async (req, res) => {
         const deleteFromCloudinary = await cloudinary.uploader.destroy(findPost.image);
         const deletedPost = await postDB.findByIdAndDelete({ _id: id });
         if (deletedPost) {
+            const updatePage = await pageDB.findByIdAndUpdate({ _id: deletedPost.pageId }, {
+                $pull: { posts: deletedPost._id }
+            })
             response.successResponse(res, deletedPost, 'Successfully deleted the post');
         }
         else {
@@ -106,9 +109,10 @@ const getAllPosts = asynchandler(async (req, res) => {
         return response.validationError(res, "Cannot fetch post without the user id");
     }
     const findUser = await userDB.findById({ _id: userId });
+    console.log(findUser.pages)
     if (findUser) {
         const allPosts = await postDB.find({
-            communityId: { $in: findUser.communities }
+            pageId: { $in: findUser.pages }
         });
         if (allPosts) {
             response.successResponse(res, allPosts, 'Successfully fetched the posts');
@@ -128,7 +132,10 @@ const getAPost = asynchandler(async (req, res) => {
         response.validationError(res, 'Cannot get the post without its id');
         return;
     }
-    const findPost = await postDB.findById({ _id: id }).populate("communityId");
+    const findPost = await postDB.findById({ _id: id }).populate("pageId").populate({path:"comments.userId",select:"name"}).populate({
+        path:"reaction",
+        select:"name"
+    });
     if (findPost) {
         response.successResponse(res, findPost, 'Successfully fetched the posts');
     }
@@ -149,7 +156,7 @@ const postComment = asynchandler(async (req, res) => {
         userId: userId,
         comment: comment
     }
-    const findPost = await postDB.findById({ _id: postId }).populate('reaction').populate("communityId").populate("comments").populate("sharedBy");
+    const findPost = await postDB.findById({ _id: postId }).populate('reaction').populate("pageId").populate("comments").populate("sharedBy");
     if (findPost) {
         // const updatePost = await postDB.findByIdAndUpdate({ _id: postId }, {
         //     $push: { comments: newPost }
@@ -171,7 +178,7 @@ const deleteComment = asynchandler(async (req, res) => {
     if (!postId || !commentId) {
         return response.validationError(res, 'Cannot delete comment without its id');
     }
-    const findPost = await postDB.findById({ _id: postId }).populate('reaction').populate("communityId").populate("comments").populate("sharedBy");
+    const findPost = await postDB.findById({ _id: postId }).populate('reaction').populate("pageId").populate("comments").populate("sharedBy");
     if (findPost) {
         const index = findPost.comments.findIndex((obj) => obj._id == commentId);
         findPost.comments.splice(index, 1);
@@ -189,7 +196,7 @@ const editComment = asynchandler(async (req, res) => {
     if (!postId || !comment || !commentId) {
         return response.validationError(res, 'Cannot update comment');
     }
-    const findPost = await postDB.findById({ _id: postId }).populate('reaction').populate("communityId").populate("comments").populate("sharedBy");
+    const findPost = await postDB.findById({ _id: postId }).populate('reaction').populate("pageId").populate("comments").populate("sharedBy");
     if (findPost) {
         const index = findPost.comments.findIndex((obj) => obj._id == commentId);
         findPost.comments[index].comment = comment;
@@ -207,7 +214,7 @@ const updateReactions = asynchandler(async (req, res) => {
     if (postId == ":postId" || !userId) {
         return response.validationError(res, "Cannot react without the post id or userId");
     }
-    const findPost = await postDB.findById({ _id: postId }).populate('reaction').populate("communityId").populate("comments").populate("sharedBy")
+    const findPost = await postDB.findById({ _id: postId }).populate('reaction').populate("pageId").populate("comments").populate("sharedBy")
     if (findPost) {
         const index = findPost.reaction.findIndex(obj => obj._id == userId)
         if (index > -1) {
@@ -227,34 +234,11 @@ const updateReactions = asynchandler(async (req, res) => {
     }
 })
 
-
-//add post to a community
-const addPostToCommunity = asynchandler(async (req, res) => {
-    const { postId } = req.params;
-    if (postId == ":postId") {
-        return response.validationError(res, "Cannot add post to community without its id");
-    }
-    const findPost = await postDB.findById({ _id: postId });
-    if (findPost) {
-        const updatedCommunity = await communityDB.findByIdAndUpdate({ _id: findPost.communityId }, {
-            $push: { posts: findPost._id }
-        }, { new: true });
-        if (updatedCommunity) {
-            response.successResponse(res, updatedCommunity, "Successfully updated the community");
-        }
-        else {
-            response.internalServerError(res, 'Failed to update the community')
-        }
-    }
-    else {
-        response.notFoundError(res, "Cannot found the post");
-    }
-})
 //share  a post to a community
 
 
-//approve the post to be shared
 
 
 
-module.exports = { test, createPost, editComment, updatePost, deleteComment, deletePost, updateReactions, addPostToCommunity, postComment, getAPost, getAllPosts };
+
+module.exports = { test, createPost, editComment, updatePost, deleteComment, deletePost, updateReactions, postComment, getAPost, getAllPosts };

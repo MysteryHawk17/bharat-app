@@ -3,7 +3,6 @@ const songDB=require("../models/songsModel");
 const response = require("../middlewares/responsemiddleware");
 const asynchandler = require('express-async-handler');
 const cloudinary = require("../utils/cloudinary");
-const communityDB = require("../models/communityModel")
 const { getAccessToken, getPlaylistTracks } = require("../utils//spotifyIntegrate");
 
 const test = asynchandler(async (req, res) => {
@@ -121,16 +120,8 @@ const deleteDeity = asynchandler(async (req, res) => {
             const deletedDeity = await deityDB.findByIdAndDelete({ _id: id });
 
             if (deletedDeity) {
-                const deletedCommunity = await communityDB.deleteMany({
-                    _id: { $in: deletedDeity.communities }
-                })
-                if (deletedCommunity) {
 
                     response.successResponse(res, deletedDeity, "Deleted the deity successfully");
-                }
-                else {
-                    response.successResponse(res, deletedDeity, "Deleted deity but failed to delete its communitite")
-                }
 
             }
             else {
@@ -174,14 +165,6 @@ const getAllSongs = asynchandler(async (req, res) => {
 
 
 
-})
-
-const uploadSong=asynchandler(async(req,res)=>{
-    const {deityId}=req.params;
-    if(deityId==":deityId"||!req.file){
-        return response.validationError(res,'Cannot upload a song without the deity id');
-    }
-    
 })
 
 module.exports = { test, createDeity, getAllDiety, getOneDeity, updateDeity, deleteDeity, getAllSongs };

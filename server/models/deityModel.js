@@ -22,11 +22,7 @@ const deitySchema = mongoose.Schema({
     flowers: {
         type: String,
         required: true
-    },
-    communities: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Community"
-    }],
+    }
 
 }, { timestamps: true });
 

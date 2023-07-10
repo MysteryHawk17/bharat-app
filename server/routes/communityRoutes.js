@@ -1,20 +1,15 @@
-const { test, createCommunity, updateFollower, updateCommunityDetails, getCommunities, getACommunity, deleteCommunity } = require("../controllers/communiyController");
+const { test, createMessage, deleteMessage, updateMessage, getCommunity } = require("../controllers/communityControllers");
 
-
-const router = require("express").Router(); 
-const upload=require("../utils/multer")
+const router = require("express").Router();
+const { checkLogin } = require("../middlewares/authMiddleware");
 
 
 
 
 router.get("/test", test);
-router.post("/create",upload.single("image"), createCommunity);
-router.patch("/followcommunity/:userId", updateFollower)
-router.put("/updatecommunitydetails/:id",upload.single("image"), updateCommunityDetails);
-router.get("/getallcommunities", getCommunities);
-router.get("/getacommunity/:id", getACommunity);
-router.delete("/deletecommunity/:id", deleteCommunity);
-
-
+router.post("/create/message/:communityId",checkLogin, createMessage);
+router.get("/getcommunitychat/:pageId", getCommunity)
+router.delete("/deletemessage/:communityId",checkLogin, deleteMessage)
+router.patch("/updatemessage/:messageId",checkLogin, updateMessage)
 
 module.exports = router;

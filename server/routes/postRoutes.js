@@ -1,4 +1,4 @@
-const { test, createPost, getAllPosts, getAPost, updatePost, deletePost, postComment, editComment, deleteComment, updateReactions, addPostToCommunity } = require("../controllers/postController");
+const { test, createPost, getAllPosts, getAPost, updatePost, deletePost, postComment, editComment, deleteComment, updateReactions } = require("../controllers/postController");
 
 const router = require("express").Router();
 
@@ -16,7 +16,7 @@ router.post("/postcomment/:postId", checkLogin, postComment);
 router.patch("/updatecomment/:postId", checkLogin, editComment);
 router.patch("/deletecomment/:postId", checkLogin, deleteComment);
 router.patch("/updatereactions/:postId", checkLogin, updateReactions);
-router.patch("/addposttocommunity/:postId", addPostToCommunity);
+
 
 
 

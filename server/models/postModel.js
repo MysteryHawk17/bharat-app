@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 
 const postSchema = mongoose.Schema({
-    communityId: {
+    pageId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Community"
+        ref: "Page"
     },
     caption: {
         type: String,

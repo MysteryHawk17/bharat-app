@@ -1,4 +1,4 @@
-const chatsDB = require("../models/chatsModel");
+const communityDB = require("../models/communityModel");
 const messageDB = require("../models/messageModel")
 const response = require("../middlewares/responsemiddleware");
 const asynchandler = require('express-async-handler');
@@ -8,26 +8,31 @@ const test = asynchandler(async (req, res) => {
     response.successResponse(res, '', "Chats routes established");
 })
 
-const getChat = asynchandler(async (req, res) => {
-    const { communityId } = req.params;
-    if (!communityId) {
+const getCommunity = asynchandler(async (req, res) => {
+    const { pageId } = req.params;
+    if (!pageId) {
         response.validationError(res, 'Cannot fetch chat without the community id');
         return;
     }
-    const fetchChats = await chatsDB.findOne({ communityId: communityId }).populate("chat");
-    if (fetchChats) {
-        response.successResponse(res, fetchChats, 'Fethced the chats successfully');
+    const fetchCommunity = await communityDB.findOne({ pageId: pageId }).populate({
+        path:'chat',
+            populate:{
+                path:'userId'
+            }
+    });
+    if (fetchCommunity) {
+        response.successResponse(res, fetchCommunity, 'Fethced the communities successfully');
     }
     else {
-        response.notFoundError(res, "Cannot find the chats assotiated with the id");
+        response.notFoundError(res, "Cannot find the communities assotiated with the id");
     }
 })
 
 const createMessage = asynchandler(async (req, res) => {
     const { message } = req.body;
     const userId = req.user._id;
-    const chatId = req.params.chatId;
-    if (!userId || !message || chatId == ":chatId") {
+    const communityId = req.params.communityId;
+    if (!userId || !message || communityId == ":communityId") {
         return response.validationError(res, "Cannot create a chat with improper details");
     }
     const newMessage = new messageDB({
@@ -35,7 +40,7 @@ const createMessage = asynchandler(async (req, res) => {
         message,
     })
     const savedMessage = await newMessage.save();
-    const findChats = await chatsDB.findById({ _id: chatId }).populate("chat");
+    const findChats = await communityDB.findById({ _id: communityId }).populate("chat");
     if (findChats) {
         const newArray = [...findChats.chat, savedMessage._id];
         findChats.chat = newArray;
@@ -49,19 +54,19 @@ const createMessage = asynchandler(async (req, res) => {
 
 const deleteMessage = asynchandler(async (req, res) => {
     const { message } = req.body;
-    const { chat } = req.params;
-    if (chat == ":chat") {
-        return response.validationError(req, "Cannot update the chat if id is not given");
+    const { communityId } = req.params;
+    if (communityId == ":communityId") {
+        return response.validationError(req, "Cannot update the community if id is not given");
     }
     if (!message) {
         return response.validationError(res, 'Cannot delete message without its id')
     }
-    const findChat = await chatsDB.findById({ _id: chat });
-    if (findChat) {
-        const findIndex = findChat.chat.indexOf(message);
+    const findCommunity = await communityDB.findById({ _id: communityId });
+    if (findCommunity) {
+        const findIndex = findCommunity.chat.indexOf(message);
         if (findIndex > -1) {
-            findChat.chat.splice(findIndex, 1);
-            await findChat.save();
+            findCommunity.chat.splice(findIndex, 1);
+            await findCommunity.save();
             const findMessage = await messageDB.findById({ _id: message });
             if (findMessage) {
                 const deletedMessage = await messageDB.findByIdAndDelete({ _id: message });
@@ -126,4 +131,4 @@ const updateMessage = asynchandler(async (req, res) => {
 
 })
 
-module.exports = { test, createMessage, getChat, updateMessage, deleteMessage };
+module.exports = { test, createMessage, getCommunity, updateMessage, deleteMessage };
